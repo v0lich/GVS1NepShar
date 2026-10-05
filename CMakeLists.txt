@@ -24,6 +24,9 @@ FetchContent_Declare(
 )
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(EIGEN_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(eigen googletest googlebenchmark)
 
 find_package(CUDAToolkit REQUIRED)

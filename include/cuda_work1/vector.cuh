@@ -29,6 +29,11 @@ class Vector {
 };
 
 template <typename AtomT>
+void vector_add_into(const Vector<AtomT>& lhs,
+                     const Vector<AtomT>& rhs,
+                     Vector<AtomT>& result);
+
+template <typename AtomT>
 Vector<AtomT> operator+(const Vector<AtomT>& lhs, const Vector<AtomT>& rhs);
 
 }  // namespace cuda_work1
