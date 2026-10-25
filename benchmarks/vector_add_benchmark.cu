@@ -3,6 +3,7 @@
 #include <benchmark/benchmark.h>
 #include <Eigen/Dense>
 #include <cuda_runtime.h>
+#include "cuda_work1/cuda_check.cuh"
 
 #include <chrono>
 #include <cstddef>
@@ -11,32 +12,46 @@
 namespace {
 
 void BM_CudaVectorAdd(benchmark::State& state) {
-  const auto n = static_cast<std::size_t>(state.range(0));
+  const auto n =
+      static_cast<std::size_t>(state.range(0));
+
   cuda_work1::Vector<float> lhs(n);
   cuda_work1::Vector<float> rhs(n);
+  cuda_work1::Vector<float> result(n);
+
   std::vector<float> values(n, 1.0F);
   lhs.data().copy_from_host(values.data());
   rhs.data().copy_from_host(values.data());
 
+  // Первый запуск и ожидание — вне измерения.
+  cuda_work1::vector_add_into(lhs, rhs, result);
+  CUDA_WORK1_CHECK(cudaDeviceSynchronize());
+
   cudaEvent_t start{};
   cudaEvent_t stop{};
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
+  CUDA_WORK1_CHECK(cudaEventCreate(&start));
+  CUDA_WORK1_CHECK(cudaEventCreate(&stop));
 
   for (auto _ : state) {
-    cudaEventRecord(start);
-    const auto result = lhs + rhs;
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
+    CUDA_WORK1_CHECK(cudaEventRecord(start));
+
+    cuda_work1::vector_add_into(lhs, rhs, result);
+
+    CUDA_WORK1_CHECK(cudaEventRecord(stop));
+    CUDA_WORK1_CHECK(cudaEventSynchronize(stop));
 
     float milliseconds = 0.0F;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    state.SetIterationTime(static_cast<double>(milliseconds) / 1000.0);
+    CUDA_WORK1_CHECK(
+        cudaEventElapsedTime(&milliseconds, start, stop));
+
+    state.SetIterationTime(
+        static_cast<double>(milliseconds) / 1000.0);
+
     benchmark::DoNotOptimize(result.data().data());
   }
 
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
+  CUDA_WORK1_CHECK(cudaEventDestroy(start));
+  CUDA_WORK1_CHECK(cudaEventDestroy(stop));
 }
 
 void BM_EigenVectorAdd(benchmark::State& state) {

@@ -31,7 +31,7 @@ def read_results(path: Path):
 
         name = parts[0]
         n = int(parts[1])
-        unit = item.get("time_unit", "ns")
+        unit = item["time_unit"]
         seconds = float(item["real_time"]) * factors[unit]
 
         if name == "BM_CudaVectorAdd":
@@ -100,6 +100,13 @@ def main():
         xaxis_title="Размер вектора n",
         yaxis_title="Ускорение, раз",
         xaxis_type="log",
+    )
+
+    speedup_figure.add_hline(
+        y=1.0,
+        line_dash="dash",
+        line_color="gray",
+        annotation_text="CUDA и Eigen равны",
     )
 
     speedup_figure.write_html(output / "speedup.html")

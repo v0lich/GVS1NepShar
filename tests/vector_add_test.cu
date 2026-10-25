@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 namespace {
@@ -43,13 +44,27 @@ TEST(VectorAdd, MatchesEigenForRequiredSizes) {
         actual_host.data(), static_cast<Eigen::Index>(n));
 
     EXPECT_TRUE(actual.isApprox(expected, 1.0e-6F));
+
+        const float max_absolute_error =
+        (actual - expected).cwiseAbs().maxCoeff();
+
+    EXPECT_LE(max_absolute_error, 1.0e-6F);
   }
 }
+
 
 TEST(VectorAdd, RejectsDifferentSizes) {
   Vector<float> lhs(3);
   Vector<float> rhs(4);
   EXPECT_THROW((void)(lhs + rhs), std::invalid_argument);
 }
+TEST(VectorAdd, HandlesEmptyVectors) {
+  Vector<float> lhs(0);
+  Vector<float> rhs(0);
 
+  const auto result = lhs + rhs;
+
+  EXPECT_EQ(result.size(), 0u);
+  EXPECT_EQ(result.data().data(), nullptr);
+}
 }  // namespace
